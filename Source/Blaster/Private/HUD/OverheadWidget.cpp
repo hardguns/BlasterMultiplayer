@@ -43,6 +43,7 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 	}
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------
 void UOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
 	if (!IsValid(InPawn))
