@@ -27,6 +27,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void SetAiming(const bool bIsAiming);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetAiming(const bool bIsAiming);
+
 private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Equip")
@@ -36,6 +41,9 @@ private:
 
 	UPROPERTY(Replicated)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(Replicated)
+	bool bAiming;
 
 public:	
 	
