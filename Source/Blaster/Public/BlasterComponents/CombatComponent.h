@@ -32,6 +32,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(const bool bIsAiming);
 
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+
 private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Equip")
@@ -39,7 +42,7 @@ private:
 
 	ABlasterCharacter* Character;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)

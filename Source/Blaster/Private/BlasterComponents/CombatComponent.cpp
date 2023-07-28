@@ -7,6 +7,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 UCombatComponent::UCombatComponent()
@@ -51,6 +52,16 @@ void UCombatComponent::Server_SetAiming_Implementation(const bool bIsAiming)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (IsValid(EquippedWeapon) && IsValid(Character))
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (!IsValid(Character) || !IsValid(WeaponToEquip))
@@ -67,5 +78,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 
 	EquippedWeapon->SetOwner(Character);
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
 }
 
