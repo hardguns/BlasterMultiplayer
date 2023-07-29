@@ -9,6 +9,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Weapon/Weapon.h"
 #include "BlasterComponents/CombatComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -34,6 +36,8 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -54,6 +58,8 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AimOffset(DeltaTime);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -172,6 +178,51 @@ void ABlasterCharacter::AimButtonReleased()
 	{
 		CombatComponent->SetAiming(false);
 	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::AimOffset(float DeltaTime)
+{
+	if (IsValid(CombatComponent) && !IsValid(CombatComponent->EquippedWeapon))
+	{
+		return;
+	}
+
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	const float Speed = Velocity.Size();
+
+	const bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir) //stand still, not jumping
+	{
+		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+
+	if (Speed > 0.f || bIsInAir) // running or jumping
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		//Map pitch from [270, 360) to [-90, 0)
+		const FVector2D InRange(270.f, 360.f);
+		const FVector2D OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+
+	//To know what happens with pitch
+	/*if (HasAuthority() && !IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AO_Pitch: %f"), AO_Pitch);
+	}*/
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

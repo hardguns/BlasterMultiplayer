@@ -15,12 +15,20 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	HandSocketName = "RightHandSocket";
+
+	BaseWalkSpeed = 600.f;
+	AimWalkSpeed = 450.f;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsValid(Character))
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -43,12 +51,22 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 {
 	bAiming = bIsAiming;
 	Server_SetAiming(bIsAiming);
+
+	if (IsValid(Character))
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::Server_SetAiming_Implementation(const bool bIsAiming)
 {
 	bAiming = bIsAiming;
+
+	if (IsValid(Character))
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

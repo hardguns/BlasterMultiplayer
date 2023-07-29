@@ -32,6 +32,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+#pragma region Input actions
+
+	// Input actions
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Value);
@@ -40,6 +43,10 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+
+#pragma endregion Input actions
+
+	void AimOffset(float DeltaTime);
 
 private:
 
@@ -64,6 +71,17 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_EquipButtonPressed();
 
+
+#pragma region Aim offset
+
+	float AO_Yaw;
+
+	float AO_Pitch;
+
+	FRotator StartingAimRotation;
+
+#pragma endregion Aim offset
+
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -71,5 +89,9 @@ public:
 	bool IsWeaponEquipped() const;
 
 	bool IsAiming() const;
+
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 
 };
