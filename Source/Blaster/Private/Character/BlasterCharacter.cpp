@@ -11,6 +11,7 @@
 #include "BlasterComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Animation/AnimInstance.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -84,6 +85,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABlasterCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -94,6 +97,24 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->Character = this;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::PlayFireMontage(const bool bAiming)
+{
+	if (!IsValid(CombatComponent) || !IsValid(CombatComponent->EquippedWeapon))
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance) && IsValid(FireWeaponMontage))
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+
+		const FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 
@@ -183,6 +204,24 @@ void ABlasterCharacter::AimButtonReleased()
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->SetAiming(false);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::FireButtonPressed()
+{
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->FireButtonPressed(true);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::FireButtonReleased()
+{
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->FireButtonPressed(false);
 	}
 }
 

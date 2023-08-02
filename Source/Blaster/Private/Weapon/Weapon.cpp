@@ -6,6 +6,8 @@
 #include "Components/WidgetComponent.h"
 #include "Character/BlasterCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Animation/AnimationAsset.h"
+#include "Components/SkeletalMeshComponent.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 AWeapon::AWeapon()
@@ -118,6 +120,15 @@ void AWeapon::ShowPickupWidget(const bool bShowWidget)
 	if (IsValid(PickupWidget))
 	{
 		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AWeapon::Fire()
+{
+	if (IsValid(FireAnimation))
+	{
+		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 }
 

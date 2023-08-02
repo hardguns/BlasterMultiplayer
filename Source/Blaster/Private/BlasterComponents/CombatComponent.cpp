@@ -8,16 +8,29 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 UCombatComponent::UCombatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	HandSocketName = "RightHandSocket";
 
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
+
+	TraceDistance = 80000.f;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bAiming);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -35,15 +48,9 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
 
-//-----------------------------------------------------------------------------------------------------------------------------------
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bAiming);
+	FHitResult HitResult;
+	TraceUnderCrosshairs(HitResult);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +84,71 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::FireButtonPressed(const bool bPressed)
+{
+	bFireButtonPressed = bPressed;
+	
+	if (bFireButtonPressed)
+	{
+		Server_Fire();
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::Server_Fire_Implementation()
+{
+	Multicast_Fire();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::Multicast_Fire_Implementation()
+{
+	if (!IsValid(EquippedWeapon))
+	{
+		return;
+	}
+
+	if (IsValid(Character))
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire();
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
+{
+	FVector2D ViewportSize;
+	if (IsValid(GEngine) && IsValid(GEngine->GameViewport))
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	const bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this, 0), CrosshairLocation, CrosshairWorldPosition, CrosshairWorldDirection);
+
+	if (bScreenToWorld)
+	{
+		const FVector StartLocation = CrosshairWorldPosition;
+		FVector EndLocation = StartLocation + CrosshairWorldDirection * TraceDistance;
+
+		GetWorld()->LineTraceSingleByChannel(TraceHitResult, StartLocation, EndLocation, ECC_Visibility);
+
+		if (!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = EndLocation;
+		}
+		else
+		{
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
+		}
+	}
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

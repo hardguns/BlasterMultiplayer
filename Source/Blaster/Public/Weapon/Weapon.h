@@ -18,6 +18,7 @@ enum class EWeaponState : uint8
 
 class USphereComponent;
 class UWidgetComponent;
+class UAnimationAsset;
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -32,6 +33,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void ShowPickupWidget(const bool bShowWidget);
+
+	void Fire();
 
 protected:
 
@@ -56,6 +59,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState)
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon properties")
+	UAnimationAsset* FireAnimation;
 
 	UFUNCTION()
 	void OnRep_WeaponState();
