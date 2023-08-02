@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Weapon/Weapon.h"
+#include "Projectile.h"
 #include "ProjectileWeapon.generated.h"
+
+class AProjectile;
 
 /**
  * 
@@ -13,5 +16,12 @@ UCLASS()
 class BLASTER_API AProjectileWeapon : public AWeapon
 {
 	GENERATED_BODY()
+
+	virtual void Fire(const FVector& HitTarget) override;
+
+private:
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> ProjectileClass;
 	
 };

@@ -71,6 +71,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float TraceDistance;
 
+	FVector HitTarget;
+
 public:	
 	
 

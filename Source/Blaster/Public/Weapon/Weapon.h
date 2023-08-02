@@ -34,7 +34,7 @@ public:
 
 	void ShowPickupWidget(const bool bShowWidget);
 
-	void Fire();
+	virtual void Fire(const FVector& HitTarget);
 
 protected:
 
