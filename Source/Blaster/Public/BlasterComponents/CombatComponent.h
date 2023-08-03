@@ -40,10 +40,10 @@ protected:
 	void FireButtonPressed(const bool bPressed);
 
 	UFUNCTION(Server, Reliable)
-	void Server_Fire();
+	void Server_Fire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Fire();
+	void Multicast_Fire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
@@ -70,8 +70,6 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float TraceDistance;
-
-	FVector HitTarget;
 
 public:	
 	

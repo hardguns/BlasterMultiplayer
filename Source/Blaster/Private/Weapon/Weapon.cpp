@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Weapon/Casing.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 AWeapon::AWeapon()
@@ -129,6 +130,16 @@ void AWeapon::Fire(const FVector& HitTarget)
 	if (IsValid(FireAnimation))
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+
+	if (IsValid(CasingClass) && IsValid(WeaponMesh))
+	{
+		FTransform SocketTransform = WeaponMesh->GetSocketTransform(FName("AmmoEject"));
+		UWorld* World = GetWorld();
+		if (IsValid(World))
+		{
+			World->SpawnActor<ACasing>(CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+		}
 	}
 }
 

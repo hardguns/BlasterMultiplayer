@@ -48,9 +48,6 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	FHitResult HitResult;
-	TraceUnderCrosshairs(HitResult);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -93,18 +90,21 @@ void UCombatComponent::FireButtonPressed(const bool bPressed)
 	
 	if (bFireButtonPressed)
 	{
-		Server_Fire();
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+
+		Server_Fire(HitResult.ImpactPoint);
 	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void UCombatComponent::Server_Fire_Implementation()
+void UCombatComponent::Server_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	Multicast_Fire();
+	Multicast_Fire(TraceHitTarget);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void UCombatComponent::Multicast_Fire_Implementation()
+void UCombatComponent::Multicast_Fire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (!IsValid(EquippedWeapon))
 	{
@@ -114,7 +114,7 @@ void UCombatComponent::Multicast_Fire_Implementation()
 	if (IsValid(Character))
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(HitTarget);
+		EquippedWeapon->Fire(TraceHitTarget);
 	}
 }
 
@@ -142,15 +142,8 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		if (!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = EndLocation;
-			HitTarget = EndLocation;
-		}
-		else
-		{
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.f, 12, FColor::Red);
 		}
 	}
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
