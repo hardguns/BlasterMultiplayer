@@ -10,6 +10,8 @@
 
 class AWeapon;
 class ABlasterCharacter;
+class ABlasterPlayerController;
+class ABlasterHUD;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
@@ -47,12 +49,18 @@ protected:
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(const float DeltaTime);
+
 private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Equip")
 	FName HandSocketName;
 
 	ABlasterCharacter* Character;
+
+	ABlasterPlayerController* Controller;
+
+	ABlasterHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
