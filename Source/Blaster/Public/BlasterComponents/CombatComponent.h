@@ -79,6 +79,16 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float TraceDistance;
 
+	/**
+	* HUD and crosshairs
+	*/
+
+	/** Amount that sets crosshair spread based on velocity */
+	float CrosshairVelocityFactor;
+
+	/** Amount that sets crosshair spread based on air state */
+	float CrosshairInAirFactor;
+
 public:	
 	
 
