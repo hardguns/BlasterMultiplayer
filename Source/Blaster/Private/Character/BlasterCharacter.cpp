@@ -359,6 +359,17 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if (!IsValid(CombatComponent))
+	{
+		return FVector();
+	}
+
+	return CombatComponent->HitTarget;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (IsValid(OverlappingWeapon))

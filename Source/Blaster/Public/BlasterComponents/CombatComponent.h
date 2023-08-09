@@ -65,6 +65,8 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
+	FVector HitTarget;
+
 	UPROPERTY(Replicated)
 	bool bAiming;
 
@@ -88,6 +90,38 @@ private:
 
 	/** Amount that sets crosshair spread based on air state */
 	float CrosshairInAirFactor;
+
+	/** Amount that sets crosshair spread based on aiming state */
+	float CrosshairAimFactor;
+
+	/** Amount that sets crosshair spread based on shooting state */
+	float CrosshairShootingFactor;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	float BaseLineSpread;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	float CrosshairAimAffectValue;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshair")
+	float CrosshairShootAffectValue;
+
+	/**
+	* Aiming and FOV
+	*/
+
+	//Field of view when not aiming; set to the camera's base FOV in BeginPlay
+	float DefaultFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 
 public:	
 	
