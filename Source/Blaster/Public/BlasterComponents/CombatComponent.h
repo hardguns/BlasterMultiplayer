@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "HUD/BlasterHUD.h"
 #include "CombatComponent.generated.h"
 
 //#define TRACE_LENGTH 80000.f;
@@ -40,6 +41,8 @@ protected:
 	void OnRep_EquippedWeapon();
 
 	void FireButtonPressed(const bool bPressed);
+
+	void Fire();
 
 	UFUNCTION(Server, Reliable)
 	void Server_Fire(const FVector_NetQuantize& TraceHitTarget);
@@ -81,9 +84,15 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float TraceDistance;
 
+	/** Offset that will be added to the start location of the line trace that checks for enemies */
+	UPROPERTY(EditAnywhere, Category = "Trace")
+	float TraceLocationForwardOffset;
+
 	/**
 	* HUD and crosshairs
 	*/
+
+	FHUDPackage HUDPackage;
 
 	/** Amount that sets crosshair spread based on velocity */
 	float CrosshairVelocityFactor;
@@ -122,6 +131,18 @@ private:
 	float ZoomedInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
+
+	/**
+	*  Automatic Fire
+	*/
+
+	FTimerHandle FireTimer;
+
+	bool bCanFire;
+
+	void StartFireTimer();
+
+	void FireTimerFinished();
 
 public:	
 	

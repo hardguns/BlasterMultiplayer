@@ -25,10 +25,13 @@ UCombatComponent::UCombatComponent()
 	AimWalkSpeed = 450.f;
 
 	TraceDistance = 80000.f;
+	TraceLocationForwardOffset = 100.f;
 
 	BaseLineSpread = 0.5f;
 	CrosshairAimAffectValue = 0.58f;
 	CrosshairShootAffectValue = 0.60f;
+
+	bCanFire = true;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -86,7 +89,6 @@ void UCombatComponent::SetHUDCrosshairs(const float DeltaTime)
 		HUD = !IsValid(HUD) ? Cast<ABlasterHUD>(Controller->GetHUD()) : HUD;
 		if (IsValid(HUD))
 		{
-			FHUDPackage HUDPackage;
 			if (IsValid(EquippedWeapon))
 			{
 				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
@@ -191,31 +193,55 @@ void UCombatComponent::Server_SetAiming_Implementation(const bool bIsAiming)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if (IsValid(EquippedWeapon) && IsValid(Character))
-	{
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-	}
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::FireButtonPressed(const bool bPressed)
 {
 	bFireButtonPressed = bPressed;
 	
-	if (bFireButtonPressed)
+	if (bFireButtonPressed && IsValid(EquippedWeapon))
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
+		Fire();
+	}
+}
 
-		Server_Fire(HitResult.ImpactPoint);
-
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::Fire()
+{
+	if (bCanFire)
+	{
+		bCanFire = false;
+		Server_Fire(HitTarget);
 		if (IsValid(EquippedWeapon))
 		{
 			CrosshairShootingFactor = CrosshairShootAffectValue;
 		}
+
+		StartFireTimer();
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::StartFireTimer()
+{
+	if (!IsValid(EquippedWeapon) || !IsValid(Character))
+	{
+		return;
+	}
+
+	Character->GetWorldTimerManager().SetTimer(FireTimer, this, &UCombatComponent::FireTimerFinished, EquippedWeapon->FireDelay);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::FireTimerFinished()
+{
+	if (!IsValid(EquippedWeapon))
+	{
+		return;
+	}
+
+	bCanFire = true;
+	if (bFireButtonPressed && EquippedWeapon->bIsAutomatic)
+	{
+		Fire();
 	}
 }
 
@@ -256,7 +282,14 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 	if (bScreenToWorld)
 	{
-		const FVector StartLocation = CrosshairWorldPosition;
+		FVector StartLocation = CrosshairWorldPosition;
+		
+		if (IsValid(Character))
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - StartLocation).Size();
+			StartLocation += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+		}
+
 		FVector EndLocation = StartLocation + CrosshairWorldDirection * TraceDistance;
 
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, StartLocation, EndLocation, ECC_Visibility);
@@ -265,6 +298,8 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			TraceHitResult.ImpactPoint = EndLocation;
 		}
+
+		HUDPackage.CrosshairsColor = IsValid(TraceHitResult.GetActor()) && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>() ? FLinearColor::Red : FLinearColor::White;
 	}
 }
 
@@ -287,5 +322,15 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetOwner(Character);
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (IsValid(EquippedWeapon) && IsValid(Character))
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
 }
 

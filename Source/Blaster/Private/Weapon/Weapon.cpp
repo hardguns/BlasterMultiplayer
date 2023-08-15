@@ -30,6 +30,9 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+
+	FireDelay = 0.15f;
+	bIsAutomatic = true;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

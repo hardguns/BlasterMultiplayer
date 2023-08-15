@@ -58,6 +58,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	float ZoomedInterpSpeed = 20.f;
 
+	/**
+	* Automatic fire
+	*/
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float FireDelay;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	bool bIsAutomatic;
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

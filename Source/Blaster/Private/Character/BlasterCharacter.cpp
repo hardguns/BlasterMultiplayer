@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Animation/AnimInstance.h"
+#include "Blaster/Blaster.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -38,13 +39,19 @@ ABlasterCharacter::ABlasterCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	CameraThreshold = 200.f;
+
+	TurnThreshold = 0.5f;
+	MaxTimeToCheckLastMovementReplication = 0.25f;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +73,21 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AimOffset(DeltaTime);
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > MaxTimeToCheckLastMovementReplication)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+
+	HideCameraIfCharacterClose();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -116,6 +137,32 @@ void ABlasterCharacter::PlayFireMontage(const bool bAiming)
 		const FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if (!IsValid(CombatComponent) || !IsValid(CombatComponent->EquippedWeapon))
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance) && IsValid(HitReactMontage))
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+
+		const FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+float ABlasterCharacter::CalculateSpeed() const
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	return Velocity.Size();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -233,14 +280,12 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		return;
 	}
 
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	const float Speed = Velocity.Size();
-
+	const float Speed = CalculateSpeed();
 	const bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	if (Speed == 0.f && !bIsInAir) //stand still, not jumping
 	{
+		bRotateRootBone = true;
 		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
@@ -256,12 +301,67 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 
 	if (Speed > 0.f || bIsInAir) // running or jumping
 	{
+		bRotateRootBone = false;
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
+	CalculateAO_Pitch();
+
+	//To know what happens with pitch
+	/*if (HasAuthority() && !IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AO_Pitch: %f"), AO_Pitch);
+	}*/
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::SimulatedProxiesTurn()
+{
+	if (!IsValid(CombatComponent) || !IsValid(CombatComponent->EquippedWeapon))
+	{
+		return;
+	}
+
+	const float Speed = CalculateSpeed();
+	if (Speed > 0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
+	bRotateRootBone = false;
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw);
+
+	if (FMath::Abs(ProxyYaw) > TurnThreshold)
+	{
+		if (ProxyYaw > TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (ProxyYaw < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+		return;
+	}
+
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::CalculateAO_Pitch()
+{
 	AO_Pitch = GetBaseAimRotation().Pitch;
 	if (AO_Pitch > 90.f && !IsLocallyControlled())
 	{
@@ -270,12 +370,6 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		const FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
-
-	//To know what happens with pitch
-	/*if (HasAuthority() && !IsLocallyControlled())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AO_Pitch: %f"), AO_Pitch);
-	}*/
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -313,6 +407,47 @@ void ABlasterCharacter::TurnInPlace(const float DeltaTime)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::Multicast_Hit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+
+	SimulatedProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (IsValid(FollowCamera) && (FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (IsValid(CombatComponent) && IsValid(CombatComponent->EquippedWeapon) && IsValid(CombatComponent->EquippedWeapon->GetWeaponMesh()))
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (IsValid(CombatComponent) && IsValid(CombatComponent->EquippedWeapon) && IsValid(CombatComponent->EquippedWeapon->GetWeaponMesh()))
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
