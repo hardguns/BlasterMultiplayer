@@ -33,6 +33,8 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(const bool bAiming);
+
+	void PlayHitReactMontage();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_Hit();
@@ -139,8 +141,6 @@ private:
 	void HideCameraIfCharacterClose();
 
 #pragma endregion Camera
-
-	void PlayHitReactMontage();
 
 	float CalculateSpeed() const;
 

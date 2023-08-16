@@ -10,6 +10,7 @@
 #include "Sound/SoundCue.h"
 #include "Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
+#include "Net/UnrealNetwork.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 AProjectile::AProjectile()
@@ -28,6 +29,8 @@ AProjectile::AProjectile()
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+
+	CurrentHitObject = EHitObject::EHO_None;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -58,10 +61,7 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 
-	if (IsValid(ImpactParticles))
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
-	}
+	SpawnHitParticle();
 
 	if (IsValid(ImpactSound))
 	{
@@ -72,14 +72,48 @@ void AProjectile::Destroyed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	Multicast_OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::Multicast_OnHit_Implementation(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if (IsValid(BlasterCharacter))
 	{
-		BlasterCharacter->Multicast_Hit();
+		CurrentHitObject = EHitObject::EHO_Character;
+		BlasterCharacter->PlayHitReactMontage();
+	}
+	else
+	{
+		CurrentHitObject = EHitObject::EHO_Surface;
 	}
 
-	Destroy();
+	if (HasAuthority())
+	{
+		Destroy();
+	}
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::SpawnHitParticle()
+{
+	UParticleSystem* SelectedParticleSystem = nullptr;
+	switch (CurrentHitObject)
+	{
+	case EHitObject::EHO_Character:
+		SelectedParticleSystem = CharacterImpactParticles;
+		break;
+	case EHitObject::EHO_Surface:
+		SelectedParticleSystem = ImpactParticles;
+		break;
+	default:
+		break;
+	}
 
+	if (IsValid(SelectedParticleSystem))
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedParticleSystem, GetActorTransform());
+	}
+}
 
