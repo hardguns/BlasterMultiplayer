@@ -7,6 +7,7 @@
 #include "BlasterHUD.generated.h"
 
 class UTexture2D;
+class UCharacterOverlay;
 
 USTRUCT(BlueprintType)
 struct FHUDPackage
@@ -36,6 +37,17 @@ class BLASTER_API ABlasterHUD : public AHUD
 public:
 
 	virtual void DrawHUD() override;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
+
+	UCharacterOverlay* CharacterOverlay;
+
+protected:
+
+	virtual void BeginPlay() override;
+
+	void AddCharacterOverlay();
 
 private:
 
