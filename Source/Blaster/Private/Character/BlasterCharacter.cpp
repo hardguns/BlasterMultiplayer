@@ -14,6 +14,7 @@
 #include "Animation/AnimInstance.h"
 #include "Blaster/Blaster.h"
 #include "PlayerController/BlasterPlayerController.h"
+#include "GameModes/BlasterGameMode.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -72,10 +73,11 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if (BlasterPlayerController)
+	UpdateHUDHealth();
+
+	if (HasAuthority())
 	{
-		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
 }
 
@@ -169,6 +171,19 @@ void ABlasterCharacter::PlayHitReactMontage()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::PlayElimMontage()
+{
+	if (ElimMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && ElimMontage)
+		{
+			AnimInstance->Montage_Play(ElimMontage);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 float ABlasterCharacter::CalculateSpeed() const
 {
 	FVector Velocity = GetVelocity();
@@ -179,7 +194,18 @@ float ABlasterCharacter::CalculateSpeed() const
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::OnRep_Health()
 {
+	PlayHitReactMontage();
+	UpdateHUDHealth();
+}
 
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::UpdateHUDHealth()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -403,6 +429,22 @@ void ABlasterCharacter::Jump()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	SetHealth(FMath::Clamp(Health - Damage, 0.f, MaxHealth));
+
+	if (Health == 0.f)
+	{
+		if (ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+		{
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatorController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::TurnInPlace(const float DeltaTime)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("AO_Yaw: %f"), AO_Yaw);
@@ -429,18 +471,28 @@ void ABlasterCharacter::TurnInPlace(const float DeltaTime)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void ABlasterCharacter::Multicast_Hit_Implementation()
-{
-	PlayHitReactMontage();
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::OnRep_ReplicatedMovement()
 {
 	Super::OnRep_ReplicatedMovement();
 
 	SimulatedProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
+}
+
+void ABlasterCharacter::SetHealth(const float NewHealth)
+{
+	if (HasAuthority() && Health != NewHealth)
+	{
+		Health = NewHealth;
+		OnRep_Health();
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::Elim_Implementation()
+{
+	bElimmed = true;
+	PlayElimMontage();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
