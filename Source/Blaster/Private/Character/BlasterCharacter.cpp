@@ -15,6 +15,7 @@
 #include "Blaster/Blaster.h"
 #include "PlayerController/BlasterPlayerController.h"
 #include "GameModes/BlasterGameMode.h"
+#include "TimerManager.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -45,7 +46,10 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
@@ -57,6 +61,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	MaxHealth = 100.f;
 	Health = 100.f;
+
+	ElimDelay = 3.f;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +202,26 @@ void ABlasterCharacter::OnRep_Health()
 {
 	PlayHitReactMontage();
 	UpdateHUDHealth();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::UpdateDissolveMaterial(const float DissolveValue)
+{
+	if (DynamicDissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &ABlasterCharacter::UpdateDissolveMaterial);
+	if (DissolveCurve && DissolveTimeline)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -489,10 +515,37 @@ void ABlasterCharacter::SetHealth(const float NewHealth)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void ABlasterCharacter::Elim_Implementation()
+void ABlasterCharacter::Elim()
+{
+	Multicast_Elim();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::Multicast_Elim_Implementation()
 {
 	bElimmed = true;
 	PlayElimMontage();
+
+	if (DissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
+
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	}
+
+	StartDissolve();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::ElimTimerFinished()
+{
+	if (ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

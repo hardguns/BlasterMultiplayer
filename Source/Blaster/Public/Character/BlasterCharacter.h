@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "BlasterTypes/TurningInPlace.h"
 #include "Interfaces/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 class USpringArmComponent;
@@ -44,8 +45,10 @@ public:
 	void SetHealth(const float NewHealth);
 
 	// When player gets eliminated
-	UFUNCTION(NetMulticast, Reliable)
 	void Elim();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Elim();
 
 protected:
 	virtual void BeginPlay() override;
@@ -105,12 +108,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UAnimMontage* ElimMontage;
 
+	FTimerHandle ElimTimer;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Elim")
+	float ElimDelay;
+
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	UFUNCTION(Server, Reliable)
 	void Server_EquipButtonPressed();
 
+	void ElimTimerFinished();
 
 #pragma region Aim offset
 
@@ -174,6 +183,31 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	/**
+	* Dissolve Effect
+	*/
+
+	// Dynamic instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	// Material instance set on the blueprint, used with the dynamic material instance
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	FOnTimelineFloat DissolveTrack;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* DissolveCurve;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(const float DissolveValue);
+
+	void StartDissolve();
 
 public:
 
