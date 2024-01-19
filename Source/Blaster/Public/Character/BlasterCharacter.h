@@ -16,6 +16,9 @@ class AWeapon;
 class UCombatComponent;
 class UAnimMontage;
 class ABlasterPlayerController;
+class UParticleSystem;
+class USoundCue;
+class ABlasterPlayerState;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -26,6 +29,8 @@ public:
 	ABlasterCharacter();
 
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Destroyed() override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -82,6 +87,9 @@ protected:
 
 	void UpdateHUDHealth();
 
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
+
 private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -109,6 +117,8 @@ private:
 	UAnimMontage* ElimMontage;
 
 	FTimerHandle ElimTimer;
+
+	ABlasterPlayerState* BlasterPlayerState;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Elim")
 	float ElimDelay;
@@ -209,6 +219,19 @@ private:
 
 	void StartDissolve();
 
+	/**
+	*  Elim Bot
+	*/
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* ElimBotSound;
+
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -232,5 +255,9 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+
+	FORCEINLINE float GetHealth() const { return Health; }
+
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 };

@@ -75,6 +75,8 @@ public:
 
 	virtual void Fire(const FVector& HitTarget);
 
+	void Dropped();
+
 protected:
 
 	virtual void BeginPlay() override;
