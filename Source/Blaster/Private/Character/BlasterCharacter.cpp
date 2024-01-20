@@ -247,7 +247,7 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if (BlasterPlayerState)
 		{
-			BlasterPlayerState->UpdateHUDScore();
+			BlasterPlayerState->AddToScore(0.f);
 		}
 	}
 }

@@ -19,6 +19,8 @@ class BLASTER_API UCharacterOverlay : public UUserWidget
 
 public:
 
+	virtual void NativeConstruct() override;
+
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthBar;
 
@@ -27,5 +29,18 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* DefeatsAmount;
+
+protected:
+
+	void BindPlayerStateDelegates();
+
+	UFUNCTION()
+	void UpdateScore(const float NewScore);
+
+	UFUNCTION()
+	void UpdateDefeats(const int32 NewDefeats);
 	
 };

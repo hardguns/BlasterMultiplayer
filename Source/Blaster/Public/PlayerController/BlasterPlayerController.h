@@ -24,6 +24,8 @@ public:
 
 	void SetHUDScore(const float Score);
 
+	void SetHUDDefeats(const int32 Defeats);
+
 protected:
 
 	virtual void BeginPlay() override;
