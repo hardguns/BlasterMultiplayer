@@ -34,10 +34,24 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DefeatsAmount;
 
+	UPROPERTY(meta = (BindWidgetOptional))
+	UTextBlock* ElimmedText;
+	
+	UPROPERTY(meta = (BindWidgetOptional))
+	UTextBlock* SpawningText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	UTextBlock* SpawningSecondsText;
+
+
 protected:
 
 	UPROPERTY(Transient)
-	TSoftObjectPtr<APawn> LastPlayerPawn;
+	TObjectPtr<APawn> LastPlayerPawn;
+
+	float CurrentRespawnTime;
+
+	FTimerHandle Respawn_TimerHandle;
 
 	void BindPlayerStateDelegates();
 
@@ -53,5 +67,13 @@ protected:
 
 	UFUNCTION()
 	void UpdateDefeats(const int32 NewDefeats);
+	
+	UFUNCTION()
+	void OnPlayerEliminated(const float RespawnTime);
+
+	UFUNCTION()
+	void UpdateRespawnTime();
+
+	void SetElimmedTextsVisibility(const ESlateVisibility NewVisibility);
 	
 };

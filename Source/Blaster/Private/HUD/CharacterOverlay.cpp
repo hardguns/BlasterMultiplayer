@@ -44,6 +44,7 @@ void UCharacterOverlay::BindControllerDelegates()
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->OnPawnChangedDelegate.AddDynamic(this, &ThisClass::OnPlayerPawnChanged);
+		OnPlayerPawnChanged(BlasterPlayerController);
 	}
 }
 
@@ -54,7 +55,7 @@ void UCharacterOverlay::OnPawnChanged(APawn* LastPawn, APawn* InPawn)
 	if (PreviousBlasterCharacter)
 	{
 		UKismetSystemLibrary::PrintString(GetWorld(), FString("Previous: " + PreviousBlasterCharacter->GetName()));
-		//PreviousBlasterCharacter->OnPlayerEliminatedDelegate.RemoveDynamic(this, &ThisClass::OnPlayerEliminated);
+		PreviousBlasterCharacter->OnPlayerEliminatedDelegate.RemoveDynamic(this, &ThisClass::OnPlayerEliminated);
 	}
 
 
@@ -62,7 +63,7 @@ void UCharacterOverlay::OnPawnChanged(APawn* LastPawn, APawn* InPawn)
 	if (BlasterCharacter)
 	{
 		UKismetSystemLibrary::PrintString(GetWorld(), FString("Current: " + BlasterCharacter->GetName()));
-		//BlasterCharacter->OnPlayerEliminatedDelegate.AddDynamic(this, &ThisClass::OnPlayerEliminated);
+		BlasterCharacter->OnPlayerEliminatedDelegate.AddDynamic(this, &ThisClass::OnPlayerEliminated);
 	}
 }
 
@@ -91,6 +92,58 @@ void UCharacterOverlay::UpdateDefeats(const int32 NewDefeats)
 	{
 		FString DefeatsText = FString::Printf(TEXT("%d"), NewDefeats);
 		DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCharacterOverlay::OnPlayerEliminated(const float RespawnTime)
+{
+	SetElimmedTextsVisibility(ESlateVisibility::Visible);
+
+	CurrentRespawnTime = RespawnTime;
+	if (SpawningSecondsText)
+	{
+		FString TimeText = FString::Printf(TEXT("%d"), FMath::FloorToInt(CurrentRespawnTime));
+		SpawningSecondsText->SetText(FText::FromString(TimeText));
+	}
+
+
+	GetWorld()->GetTimerManager().SetTimer(Respawn_TimerHandle, this, &ThisClass::UpdateRespawnTime, 1.f, true);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCharacterOverlay::UpdateRespawnTime()
+{
+	CurrentRespawnTime -= 1.f;
+	if (SpawningSecondsText)
+	{
+		FString TimeText = FString::Printf(TEXT("%d"), FMath::FloorToInt(CurrentRespawnTime));
+		SpawningSecondsText->SetText(FText::FromString(TimeText));
+	}
+
+	if (CurrentRespawnTime <= 0.f)
+	{
+		SetElimmedTextsVisibility(ESlateVisibility::Collapsed);
+		GetWorld()->GetTimerManager().ClearTimer(Respawn_TimerHandle);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCharacterOverlay::SetElimmedTextsVisibility(const ESlateVisibility NewVisibility)
+{
+	if (ElimmedText)
+	{
+		ElimmedText->SetVisibility(NewVisibility);
+	}
+
+	if (SpawningText)
+	{
+		SpawningText->SetVisibility(NewVisibility);
+	}
+
+	if (SpawningSecondsText)
+	{
+		SpawningSecondsText->SetVisibility(NewVisibility);
 	}
 }
 
