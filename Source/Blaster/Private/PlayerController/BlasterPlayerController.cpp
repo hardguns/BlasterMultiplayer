@@ -28,6 +28,14 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterPlayerController::SetPawn(APawn* InPawn)
+{
+	Super::SetPawn(InPawn);
+
+	OnPawnChangedDelegate.Broadcast(this);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxHealth)
 {
 	BlasterHUD = BlasterHUD ? BlasterHUD : Cast<ABlasterHUD>(GetHUD());

@@ -550,6 +550,8 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	bElimmed = true;
 	PlayElimMontage();
 
+	OnPlayerEliminatedDelegate.Broadcast(ElimDelay);
+
 	// Starting dissolve effect
 	if (DissolveMaterialInstance)
 	{

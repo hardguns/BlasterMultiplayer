@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBlasterOnPawnChanged, ABlasterPlayerController*, BlasterPlayerController);
+
 class ABlasterHUD;
 
 /**
@@ -18,7 +20,11 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 
+	FBlasterOnPawnChanged OnPawnChangedDelegate;
+
 	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void SetPawn(APawn* InPawn) override;
 
 	void SetHUDHealth(const float Health, const float MaxHealth);
 

@@ -8,6 +8,7 @@
 
 class UProgressBar;
 class UTextBlock;
+class ABlasterPlayerController;
 
 /**
  * 
@@ -35,7 +36,17 @@ public:
 
 protected:
 
+	UPROPERTY(Transient)
+	TSoftObjectPtr<APawn> LastPlayerPawn;
+
 	void BindPlayerStateDelegates();
+
+	void BindControllerDelegates();
+
+	void OnPawnChanged(APawn* LastPawn, APawn* InPawn);
+
+	UFUNCTION()
+	void OnPlayerPawnChanged(ABlasterPlayerController* BlasterPlayerController);
 
 	UFUNCTION()
 	void UpdateScore(const float NewScore);

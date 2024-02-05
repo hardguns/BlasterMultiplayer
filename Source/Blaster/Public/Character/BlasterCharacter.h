@@ -9,6 +9,8 @@
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBlasterOnPlayerEliminatedSignature, const float, RespawnTime);
+
 class USpringArmComponent;
 class UCameraComponent;
 class UWidgetComponent;
@@ -26,7 +28,10 @@ class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCro
 	GENERATED_BODY()
 
 public:
+
 	ABlasterCharacter();
+
+	FBlasterOnPlayerEliminatedSignature OnPlayerEliminatedDelegate;
 
 	virtual void Tick(float DeltaTime) override;
 
