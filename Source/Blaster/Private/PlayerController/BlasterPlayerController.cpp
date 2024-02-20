@@ -83,3 +83,33 @@ void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 	}
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterPlayerController::SetHUDWeaponAmmo(const int32 WeaponAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount;
+
+	if (bHUDValid)
+	{
+		FString WeaponAmmoText = FString::Printf(TEXT("%d"), WeaponAmmo);
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(WeaponAmmoText));
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterPlayerController::SetHUDCarriedAmmo(const int32 CarriedAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount;
+
+	if (bHUDValid)
+	{
+		FString CarriedAmmoText = FString::Printf(TEXT("%d"), CarriedAmmo);
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+}
+

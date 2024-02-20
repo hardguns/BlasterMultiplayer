@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "HUD/BlasterHUD.h"
+#include "Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 //#define TRACE_LENGTH 80000.f;
@@ -68,6 +69,9 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
 	FVector HitTarget;
 
 	UPROPERTY(Replicated)
@@ -87,6 +91,18 @@ private:
 	/** Offset that will be added to the start location of the line trace that checks for enemies */
 	UPROPERTY(EditAnywhere, Category = "Trace")
 	float TraceLocationForwardOffset;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo;
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	void SetCarriedAmmo(const EWeaponType CurrentWeaponType);
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	void InitializeCarriedAmmo();
 
 	/**
 	* HUD and crosshairs
@@ -144,7 +160,10 @@ private:
 
 	void FireTimerFinished();
 
+	bool CanFire();
+
 public:	
 	
+	int32 GetCarriedAmmo() const { return CarriedAmmo; }
 
 };

@@ -34,6 +34,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DefeatsAmount;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* WeaponAmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CarriedAmmoAmount;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* ElimmedText;
 	
@@ -42,7 +48,6 @@ public:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* SpawningSecondsText;
-
 
 protected:
 

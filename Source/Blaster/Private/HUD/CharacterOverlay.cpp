@@ -54,7 +54,6 @@ void UCharacterOverlay::OnPawnChanged(APawn* LastPawn, APawn* InPawn)
 	ABlasterCharacter* PreviousBlasterCharacter = Cast<ABlasterCharacter>(LastPawn);
 	if (PreviousBlasterCharacter)
 	{
-		UKismetSystemLibrary::PrintString(GetWorld(), FString("Previous: " + PreviousBlasterCharacter->GetName()));
 		PreviousBlasterCharacter->OnPlayerEliminatedDelegate.RemoveDynamic(this, &ThisClass::OnPlayerEliminated);
 	}
 
@@ -62,7 +61,6 @@ void UCharacterOverlay::OnPawnChanged(APawn* LastPawn, APawn* InPawn)
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn);
 	if (BlasterCharacter)
 	{
-		UKismetSystemLibrary::PrintString(GetWorld(), FString("Current: " + BlasterCharacter->GetName()));
 		BlasterCharacter->OnPlayerEliminatedDelegate.AddDynamic(this, &ThisClass::OnPlayerEliminated);
 	}
 }

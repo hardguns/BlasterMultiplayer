@@ -32,6 +32,10 @@ public:
 
 	void SetHUDDefeats(const int32 Defeats);
 
+	void SetHUDWeaponAmmo(const int32 WeaponAmmo);
+
+	void SetHUDCarriedAmmo(const int32 CarriedAmmo);
+
 protected:
 
 	virtual void BeginPlay() override;

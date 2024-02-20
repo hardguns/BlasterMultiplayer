@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -21,6 +22,8 @@ class UWidgetComponent;
 class UAnimationAsset;
 class ACasing;
 class UTexture2D;
+class ABlasterCharacter;
+class ABlasterPlayerController;
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -71,6 +74,10 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void SetOwner(AActor* NewOwner) override;
+
+	virtual void OnRep_Owner() override;
+
 	void ShowPickupWidget(const bool bShowWidget);
 
 	virtual void Fire(const FVector& HitTarget);
@@ -88,6 +95,12 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 private:
+
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -107,8 +120,24 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ACasing> CasingClass;
 
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+
 	UFUNCTION()
 	void OnRep_WeaponState();
+
+	void SetHUDAmmo();
 
 public:	
 
@@ -118,4 +147,6 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomedInterpSpeed() const { return ZoomedInterpSpeed; }
+	bool IsEmpty();
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 };
