@@ -384,6 +384,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::Reload()
+{
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (IsValid(EquippedWeapon) && IsValid(Character))

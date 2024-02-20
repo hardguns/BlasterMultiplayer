@@ -30,6 +30,8 @@ public:
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
 
+	void Reload();
+
 protected:
 	virtual void BeginPlay() override;
 
