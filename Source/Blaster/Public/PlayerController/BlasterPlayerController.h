@@ -36,11 +36,21 @@ public:
 
 	void SetHUDCarriedAmmo(const int32 CarriedAmmo);
 
+	void SetHUDMatchCountdown(const float CountdownTime);
+
 protected:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
+	void SetHUDTime();
+
 private:
 
 	ABlasterHUD* BlasterHUD;
+
+	float MatchTime = 120.f;
+
+	uint32 CountdownInt = 0;
 };

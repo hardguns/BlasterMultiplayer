@@ -40,6 +40,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoAmount;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchCountdownText;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* ElimmedText;
 	
