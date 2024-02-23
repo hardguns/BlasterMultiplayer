@@ -24,6 +24,7 @@ class ACasing;
 class UTexture2D;
 class ABlasterCharacter;
 class ABlasterPlayerController;
+class USoundCue;
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -32,6 +33,9 @@ class BLASTER_API AWeapon : public AActor
 	
 public:	
 	AWeapon();
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
 
 	/**
 	*  Textures for the weapon crosshairs

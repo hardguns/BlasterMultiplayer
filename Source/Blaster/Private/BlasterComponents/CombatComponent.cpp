@@ -13,6 +13,7 @@
 #include "PlayerController/BlasterPlayerController.h"
 #include "HUD/BlasterHUD.h"
 #include "Camera/CameraComponent.h"
+#include "Sound/SoundCue.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 UCombatComponent::UCombatComponent()
@@ -168,6 +169,16 @@ void UCombatComponent::SetCarriedAmmo(const EWeaponType CurrentWeaponType)
 //-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::OnRep_CarriedAmmo()
 {
+	if (Character == nullptr)
+	{
+		return;
+	}
+
+	Controller = Controller == nullptr ? Character->GetController<ABlasterPlayerController>() : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -273,6 +284,11 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -367,7 +383,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		UpdateAmmoValues();
+		SetCarriedAmmo(EquippedWeapon->GetWeaponType());
+	}
+
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
+
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
 	}
 
 	EquippedWeapon->SetOwner(Character);
@@ -478,12 +504,6 @@ void UCombatComponent::UpdateAmmoValues()
 	}
 
 	EquippedWeapon->AddAmmo(-ReloadAmount);
-
-	Controller = Controller == nullptr ? Character->GetController<ABlasterPlayerController>() : Controller;
-	if (Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
