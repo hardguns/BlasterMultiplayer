@@ -20,6 +20,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PlayerState/BlasterPlayerState.h"
+#include "Weapon/WeaponTypes.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 ABlasterCharacter::ABlasterCharacter()
@@ -143,6 +144,31 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->Character = this;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if (!IsValid(CombatComponent) || !IsValid(CombatComponent->EquippedWeapon))
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance) && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (CombatComponent->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 
@@ -669,6 +695,20 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (IsValid(OverlappingWeapon))
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+
+	if (IsValid(LastWeapon))
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
 bool ABlasterCharacter::IsWeaponEquipped() const
 {
 	return (IsValid(CombatComponent) && CombatComponent->EquippedWeapon);
@@ -703,15 +743,14 @@ FVector ABlasterCharacter::GetHitTarget() const
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+ECombatState ABlasterCharacter::GetCombatState() const
 {
-	if (IsValid(OverlappingWeapon))
+	if (CombatComponent == nullptr)
 	{
-		OverlappingWeapon->ShowPickupWidget(true);
+		return ECombatState::ECS_MAX;
 	}
-	
-	if (IsValid(LastWeapon))
-	{
-		LastWeapon->ShowPickupWidget(false);
-	}
+
+	return CombatComponent->CombatState;
 }
+
+

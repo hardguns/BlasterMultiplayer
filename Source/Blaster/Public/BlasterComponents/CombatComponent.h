@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "HUD/BlasterHUD.h"
 #include "Weapon/WeaponTypes.h"
+#include "BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 //#define TRACE_LENGTH 80000.f;
@@ -53,6 +54,16 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitTarget);
 
+	UFUNCTION(Server, Reliable)
+	void Server_Reload();
+
+	void HandleReload();
+
+	int32 AmountToReload();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(const float DeltaTime);
@@ -99,12 +110,20 @@ private:
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState;
+
 	void SetCarriedAmmo(const EWeaponType CurrentWeaponType);
 
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
 	void InitializeCarriedAmmo();
+
+	void SetCombatState(const ECombatState NewCombatState);
+
+	UFUNCTION()
+	void OnRep_CombatState();
 
 	/**
 	* HUD and crosshairs
@@ -163,6 +182,8 @@ private:
 	void FireTimerFinished();
 
 	bool CanFire();
+
+	void UpdateAmmoValues();
 
 public:	
 	

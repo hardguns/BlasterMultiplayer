@@ -84,6 +84,8 @@ public:
 
 	void Dropped();
 
+	void AddAmmo(const int32 AmmoToAdd);
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -149,4 +151,6 @@ public:
 	FORCEINLINE float GetZoomedInterpSpeed() const { return ZoomedInterpSpeed; }
 	bool IsEmpty();
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };
