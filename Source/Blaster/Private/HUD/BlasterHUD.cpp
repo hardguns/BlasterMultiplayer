@@ -4,25 +4,38 @@
 #include "HUD/BlasterHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "HUD/CharacterOverlay.h"
+#include "HUD/Announcement.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddCharacterOverlay();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterHUD::AddCharacterOverlay()
 {
 	APlayerController* PlayerController = GetOwningPlayerController();
-	if (IsValid(PlayerController) && IsValid(CharacterOverlayClass))
+	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
-		if (IsValid(CharacterOverlay))
+		if (CharacterOverlay)
 		{
 			CharacterOverlay->AddToViewport();
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterHUD::AddAnnouncementWidget()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementClass)
+	{
+		AnnouncementWidget = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
+		if (AnnouncementWidget)
+		{
+			AnnouncementWidget->AddToViewport();
 		}
 	}
 }

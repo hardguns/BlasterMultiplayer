@@ -8,6 +8,69 @@
 #include "GameFramework/PlayerStart.h"
 #include "PlayerState/BlasterPlayerState.h"
 
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+ABlasterGameMode::ABlasterGameMode()
+{
+	bDelayedStart = true;
+	WarmupTime = 10.f;
+	MatchTime = 120.f;
+	CooldownTime = 10.f;
+	CountdownTime = 0.f;
+	LevelStartingTime = 0.f;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			SetMatchState(MatchState::Cooldown);
+		}
+		
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* BlasterController = Cast<ABlasterPlayerController>(*It);
+		if (BlasterController)
+		{
+			BlasterController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {

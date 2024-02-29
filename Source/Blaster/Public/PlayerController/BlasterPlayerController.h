@@ -9,6 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBlasterOnPawnChanged, ABlasterPlayerController*, BlasterPlayerController);
 
 class ABlasterHUD;
+class UCharacterOverlay;
 
 /**
  * 
@@ -20,11 +21,15 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 
+	ABlasterPlayerController();
+
 	FBlasterOnPawnChanged OnPawnChangedDelegate;
 
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void SetPawn(APawn* InPawn) override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetHUDHealth(const float Health, const float MaxHealth);
 
@@ -38,7 +43,28 @@ public:
 
 	void SetHUDMatchCountdown(const float CountdownTime);
 
+	void SetHUDAnnouncementCountdown(const float CountdownTime);
+
+	virtual float GetServerTime(); // Sync with server world clock
+
+	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible
+
+	float GetTimeLeftByState();
+
+	void OnMatchStateSet(const FName& State);
+
+	void HandleMatchHasStarted();
+
+	void HandleCooldown();
+
 protected:
+
+	float ClientServerDelta;
+
+	UPROPERTY(EditAnywhere, Category = "Time")
+	float TimeSyncFrequency;
+
+	float TimeSyncRunningTime;
 
 	virtual void BeginPlay() override;
 
@@ -46,11 +72,56 @@ protected:
 
 	void SetHUDTime();
 
+	void PollInit();
+
+	/** 
+	* Sync time between client and server
+	*/
+
+	// Requests the current server time, passing in the client's time when request was sent
+	UFUNCTION(Server, Reliable)
+	void Server_RequestServerTime(const float TimeOfClientRequest);
+
+	// Reports the current server time to the client in response to Server_RequestServerTime
+	UFUNCTION(Client, Reliable)
+	void Client_ReportServerTime(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest);
+
+	void CheckTimeSync(const float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void Server_CheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void Client_JoinMidgame(const FName& StateOfMatch, const float Warmup, const float Match, const float StartingTime);
+
 private:
 
 	ABlasterHUD* BlasterHUD;
 
-	float MatchTime = 120.f;
+	float MatchTime;
 
-	uint32 CountdownInt = 0;
+	float WarmupTime;
+
+	float LevelStartingTime;
+
+	uint32 CountdownInt;
+
+	bool bInitializeCharacterOverlay;
+
+	/** TODO: CHANGE THIS TO OVERLAY DELEGATE */
+	float HUDHealth;
+
+	float HUDMaxHealth;
+
+	/*******************************************/
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	UCharacterOverlay* CharacterOverlay;
+
 };
