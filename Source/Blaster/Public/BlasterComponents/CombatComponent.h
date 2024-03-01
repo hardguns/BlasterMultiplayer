@@ -33,6 +33,8 @@ public:
 
 	void Reload();
 
+	void FireButtonPressed(const bool bPressed);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -43,8 +45,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
-
-	void FireButtonPressed(const bool bPressed);
 
 	void Fire();
 

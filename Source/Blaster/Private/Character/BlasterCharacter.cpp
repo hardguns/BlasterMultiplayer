@@ -68,6 +68,7 @@ ABlasterCharacter::ABlasterCharacter()
 	Health = 100.f;
 
 	ElimDelay = 3.f;
+	bDisableGameplay = false;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +78,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -97,6 +99,21 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RotateInPlace(DeltaTime);
+	HideCameraIfCharacterClose();
+	PollInit();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void ABlasterCharacter::RotateInPlace(const float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -110,9 +127,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-
-	HideCameraIfCharacterClose();
-	PollInit();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -282,6 +296,11 @@ void ABlasterCharacter::PollInit()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::MoveForward(float Value)
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -293,6 +312,11 @@ void ABlasterCharacter::MoveForward(float Value)
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::MoveRight(float Value)
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -316,7 +340,12 @@ void ABlasterCharacter::LookUp(float Value)
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::EquipButtonPressed()
 {
-	if (IsValid(CombatComponent))
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (CombatComponent)
 	{
 		if (HasAuthority())
 		{
@@ -341,6 +370,11 @@ void ABlasterCharacter::Server_EquipButtonPressed_Implementation()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -353,6 +387,11 @@ void ABlasterCharacter::CrouchButtonPressed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (CombatComponent)
 	{
 		CombatComponent->Reload();
@@ -362,7 +401,12 @@ void ABlasterCharacter::ReloadButtonPressed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::AimButtonPressed()
 {
-	if (IsValid(CombatComponent))
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (CombatComponent)
 	{
 		CombatComponent->SetAiming(true);
 	}
@@ -371,7 +415,12 @@ void ABlasterCharacter::AimButtonPressed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::AimButtonReleased()
 {
-	if (IsValid(CombatComponent))
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (CombatComponent)
 	{
 		CombatComponent->SetAiming(false);
 	}
@@ -380,7 +429,12 @@ void ABlasterCharacter::AimButtonReleased()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::FireButtonPressed()
 {
-	if (IsValid(CombatComponent))
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (CombatComponent)
 	{
 		CombatComponent->FireButtonPressed(true);
 	}
@@ -389,7 +443,12 @@ void ABlasterCharacter::FireButtonPressed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::FireButtonReleased()
 {
-	if (IsValid(CombatComponent))
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (CombatComponent)
 	{
 		CombatComponent->FireButtonPressed(false);
 	}
@@ -498,6 +557,11 @@ void ABlasterCharacter::CalculateAO_Pitch()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterCharacter::Jump()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -609,6 +673,11 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
+	bDisableGameplay = true;
+	if (CombatComponent)
+	{
+		CombatComponent->FireButtonPressed(false);
+	}
 	
 	if (BlasterPlayerController)
 	{
@@ -648,6 +717,13 @@ void ABlasterCharacter::Destroyed()
 	if (ElimBotComponent)
 	{
 		ElimBotComponent->DestroyComponent();
+	}
+
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	const bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
+	{
+		CombatComponent->EquippedWeapon->Destroy();
 	}
 }
 

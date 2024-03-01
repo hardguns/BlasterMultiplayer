@@ -34,6 +34,9 @@ public:
 
 	FBlasterOnPlayerEliminatedSignature OnPlayerEliminatedDelegate;
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay;
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Destroyed() override;
@@ -98,6 +101,8 @@ protected:
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
+
+	void RotateInPlace(const float DeltaTime);
 
 private:
 
@@ -277,6 +282,8 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 
 	ECombatState GetCombatState() const;
 };

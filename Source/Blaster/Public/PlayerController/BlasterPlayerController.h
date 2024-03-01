@@ -10,6 +10,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBlasterOnPawnChanged, ABlasterPlaye
 
 class ABlasterHUD;
 class UCharacterOverlay;
+class ABlasterGameMode;
 
 /**
  * 
@@ -92,15 +93,20 @@ protected:
 	void Server_CheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-	void Client_JoinMidgame(const FName& StateOfMatch, const float Warmup, const float Match, const float StartingTime);
+	void Client_JoinMidgame(const FName& StateOfMatch, const float Warmup, const float Match, const float Cooldown, const float StartingTime);
 
 private:
 
 	ABlasterHUD* BlasterHUD;
 
+	UPROPERTY()
+	ABlasterGameMode* BlasterGameMode;
+
 	float MatchTime;
 
 	float WarmupTime;
+
+	float CooldownTime;
 
 	float LevelStartingTime;
 
