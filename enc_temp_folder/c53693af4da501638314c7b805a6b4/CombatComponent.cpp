@@ -66,12 +66,6 @@ void UCombatComponent::BeginPlay()
 		{
 			InitializeCarriedAmmo();
 		}
-
-		Controller = !IsValid(Controller) ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
-		if (Controller && Character->IsLocallyControlled())
-		{
-			Controller->SetHUDWeaponIcon(EquippedWeapon ? EquippedWeapon->WeaponIcon : nullptr);
-		}
 	}
 }
 
@@ -229,16 +223,6 @@ void UCombatComponent::SetAiming(const bool bIsAiming)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void UCombatComponent::SetEquippedWeapon(AWeapon* WeaponToEquip)
-{
-	if (Character && Character->HasAuthority() && EquippedWeapon != WeaponToEquip)
-	{
-		EquippedWeapon = WeaponToEquip;
-		OnRep_EquippedWeapon();
-	}
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::Server_SetAiming_Implementation(const bool bIsAiming)
 {
 	bAiming = bIsAiming;
@@ -389,7 +373,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		EquippedWeapon->Dropped();
 	}
 
-	SetEquippedWeapon(WeaponToEquip);
+	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(HandSocketName);
 	if (IsValid(HandSocket))
@@ -536,12 +520,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
-	}
-
-	Controller = !IsValid(Controller) ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
-	if (Controller && Character->IsLocallyControlled())
-	{
-		Controller->SetHUDWeaponIcon(EquippedWeapon ? EquippedWeapon->WeaponIcon : nullptr);
 	}
 }
 

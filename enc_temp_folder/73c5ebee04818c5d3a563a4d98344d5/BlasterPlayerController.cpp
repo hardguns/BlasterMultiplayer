@@ -7,7 +7,6 @@
 #include "HUD/Announcement.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
-#include "Components/Image.h"
 #include "BlasterComponents/CombatComponent.h"
 #include "GameState/BlasterGameState.h"
 #include "PlayerState/BlasterPlayerState.h"
@@ -159,21 +158,6 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(const int32 CarriedAmmo)
 	{
 		FString CarriedAmmoText = FString::Printf(TEXT("%d"), CarriedAmmo);
 		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
-	}
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------
-void ABlasterPlayerController::SetHUDWeaponIcon(UTexture2D* NewIcon)
-{
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	bool bHUDValid = BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->WeaponIcon;
-
-	if (bHUDValid)
-	{
-		BlasterHUD->CharacterOverlay->WeaponIcon->SetBrushFromTexture(NewIcon, true);
-		BlasterHUD->CharacterOverlay->WeaponIcon->ColorAndOpacity = NewIcon ? FLinearColor(1.f, 1.f, 1.f, 1.f) : FLinearColor(1.f, 1.f, 1.f, 0.f);
 	}
 }
 

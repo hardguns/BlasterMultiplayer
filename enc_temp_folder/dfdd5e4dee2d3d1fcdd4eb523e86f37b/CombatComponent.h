@@ -40,8 +40,6 @@ protected:
 
 	void SetAiming(const bool bIsAiming);
 
-	void SetEquippedWeapon(AWeapon* WeaponToEquip);
-
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(const bool bIsAiming);
 

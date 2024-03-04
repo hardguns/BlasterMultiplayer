@@ -42,8 +42,6 @@ public:
 
 	void SetHUDCarriedAmmo(const int32 CarriedAmmo);
 
-	void SetHUDWeaponIcon(UTexture2D* NewIcon);
-
 	void SetHUDMatchCountdown(const float CountdownTime);
 
 	void SetHUDAnnouncementCountdown(const float CountdownTime);

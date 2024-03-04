@@ -9,7 +9,6 @@
 class UProgressBar;
 class UTextBlock;
 class ABlasterPlayerController;
-class UImage;
 
 /**
  * 
@@ -52,9 +51,6 @@ public:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* SpawningSecondsText;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
-	UImage* WeaponIcon;
 
 protected:
 
