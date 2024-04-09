@@ -34,6 +34,7 @@ UCombatComponent::UCombatComponent()
 
 	bCanFire = true;
 	StartingARAmmo = 30;
+	StartingRocketAmmo = 0;
 	CombatState = ECombatState::ECS_Unoccupied;
 }
 
@@ -191,6 +192,7 @@ void UCombatComponent::OnRep_CarriedAmmo()
 void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

@@ -72,6 +72,7 @@ void AProjectile::Destroyed()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	Multicast_OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 	Destroy();
 }
 

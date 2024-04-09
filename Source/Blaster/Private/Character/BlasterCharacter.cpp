@@ -651,6 +651,7 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	{
 		BlasterPlayerController->SetHUDWeaponAmmo(0);
 		BlasterPlayerController->SetHUDCarriedAmmo(0);
+		BlasterPlayerController->SetHUDWeaponIcon(nullptr);
 	}
 
 	bElimmed = true;
