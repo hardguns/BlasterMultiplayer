@@ -33,7 +33,24 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere)
+	UBoxComponent* CollisionBox;
+	
+	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* CharacterImpactParticles;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundCue* ImpactSound;
+
+	EHitObject CurrentHitObject;
+
+	UPROPERTY(VisibleAnywhere)
+	UProjectileMovementComponent* ProjectileMovementComponent;
 
 	virtual void BeginPlay() override;
 
@@ -45,29 +62,14 @@ protected:
 
 	void SpawnHitParticle();
 
+	void SpawnHitEffects();
+
 private:
-
-	UPROPERTY(EditAnywhere)
-	UBoxComponent* CollisionBox;
-
-	UPROPERTY(VisibleAnywhere)
-	UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* Tracer;
-
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles;
-
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* CharacterImpactParticles;
-
-	UPROPERTY(EditAnywhere)
-	USoundCue* ImpactSound;
-
-	EHitObject CurrentHitObject;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

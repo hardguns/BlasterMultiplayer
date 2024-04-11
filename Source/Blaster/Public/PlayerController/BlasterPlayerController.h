@@ -123,7 +123,7 @@ private:
 
 	/*******************************************/
 
-	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MatchState, meta = (AllowPrivateAccess = true))
 	FName MatchState;
 
 	UFUNCTION()

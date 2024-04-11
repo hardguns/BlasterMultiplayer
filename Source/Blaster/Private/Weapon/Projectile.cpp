@@ -3,9 +3,7 @@
 
 #include "Weapon/Projectile.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Sound/SoundCue.h"
 #include "Character/BlasterCharacter.h"
@@ -26,9 +24,6 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 
 	CurrentHitObject = EHitObject::EHO_None;
 }
@@ -61,12 +56,7 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 
-	SpawnHitParticle();
-
-	if (IsValid(ImpactSound))
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-	}
+	SpawnHitEffects();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -110,6 +100,17 @@ void AProjectile::SpawnHitParticle()
 	if (IsValid(SelectedParticleSystem))
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedParticleSystem, GetActorTransform());
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::SpawnHitEffects()
+{
+	SpawnHitParticle();
+
+	if (IsValid(ImpactSound))
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 	}
 }
 

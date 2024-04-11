@@ -398,15 +398,22 @@ void ABlasterPlayerController::SetHUDTime()
 //-----------------------------------------------------------------------------------------------------------------------------------
 void ABlasterPlayerController::PollInit()
 {
+	if (!BlasterHUD)
+	{
+		return;
+	}
+	
 	if (CharacterOverlay == nullptr)
 	{
-		if (BlasterHUD && BlasterHUD->CharacterOverlay)
+		if (!BlasterHUD->CharacterOverlay && MatchState == MatchState::InProgress)
 		{
-			CharacterOverlay = BlasterHUD->CharacterOverlay;
-			if (CharacterOverlay)
-			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-			}
+			BlasterHUD->AddCharacterOverlay();
+		}
+		
+		CharacterOverlay = BlasterHUD->CharacterOverlay;
+		if (CharacterOverlay)
+		{
+			SetHUDHealth(HUDHealth, HUDMaxHealth);
 		}
 	}
 }
