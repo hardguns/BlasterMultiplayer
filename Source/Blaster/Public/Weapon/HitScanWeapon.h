@@ -6,20 +6,48 @@
 #include "Weapon.h"
 #include "HitScanWeapon.generated.h"
 
+class UParticleSystem;
+class USoundCue;
+
 UCLASS()
 class BLASTER_API AHitScanWeapon : public AWeapon
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
+	
 	AHitScanWeapon();
 
+	virtual void Fire(const FVector& HitTarget) override;
+	
 protected:
-	// Called when the game starts or when spawned
+
+	UPROPERTY(EditAnywhere, Category = "Fire")
+	FName FlashSocketName;
+	
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+
+	UPROPERTY(EditAnywhere)
+	float Damage;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles;
+
+	/**
+	 * In case, weapon does not have an animation associated particles and SFX will be spawned from class 
+	 */
+	
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* FireSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound;
 };
