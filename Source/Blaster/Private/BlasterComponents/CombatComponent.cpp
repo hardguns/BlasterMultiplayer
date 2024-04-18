@@ -5,7 +5,6 @@
 #include "Weapon/Weapon.h"
 #include "Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -37,6 +36,8 @@ UCombatComponent::UCombatComponent()
 	StartingRocketAmmo = 0;
 	StartingPistolAmmo = 15;
 	StartingSMGAmmo = 20;
+	StartingShotgunAmmo = 0;
+	StartingSniperAmmo = 0;
 	CombatState = ECombatState::ECS_Unoccupied;
 }
 
@@ -197,6 +198,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -225,13 +228,20 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 //-----------------------------------------------------------------------------------------------------------------------------------
 void UCombatComponent::SetAiming(const bool bIsAiming)
 {
+	if (!Character || !EquippedWeapon)
+	{
+		return;
+	}
+	
 	bAiming = bIsAiming;
 	Server_SetAiming(bIsAiming);
 
-	if (IsValid(Character))
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		Character->ShowSniperScopeWidget(bIsAiming);
 	}
+	
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------

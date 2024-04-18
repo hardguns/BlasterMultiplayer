@@ -189,6 +189,12 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_SubmachineGun:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("Rifle");
+			break;
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
@@ -708,6 +714,13 @@ void ABlasterCharacter::Multicast_Elim_Implementation()
 	if (ElimBotSound)
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, ElimBotSound, GetActorLocation());
+	}
+
+	const bool bHideSniperScope = CombatComponent && CombatComponent->bAiming
+	&& CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (IsLocallyControlled() && bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
 	}
 }
 

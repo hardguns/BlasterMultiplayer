@@ -22,18 +22,30 @@ public:
 	
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "Fire")
-	FName FlashSocketName;
-	
-	virtual void BeginPlay() override;
-
-private:
-
 	UPROPERTY(EditAnywhere)
 	float Damage;
+	
+	UPROPERTY(EditAnywhere, Category = "Fire")
+	FName FlashSocketName;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
+
+	/**
+	* In case, weapon does not have an animation associated particles and SFX will be spawned from class 
+	 */
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound;
+
+	//--------------------------------------------------------------------------------------------------
+	
+	virtual void BeginPlay() override;
+
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
+
+	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
+
+private:
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* BeamParticles;
@@ -48,6 +60,16 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* FireSound;
 
-	UPROPERTY(EditAnywhere)
-	USoundCue* HitSound;
+	/**
+	 * Trace end with scatter
+	 */
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter;
 };

@@ -66,6 +66,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Elim();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(const bool bShowScope);
+
 protected:
 	virtual void BeginPlay() override;
 
