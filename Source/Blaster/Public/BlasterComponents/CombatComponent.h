@@ -123,6 +123,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingSniperAmmo;
 
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo;
+
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)

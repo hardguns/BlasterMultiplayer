@@ -2,13 +2,15 @@
 
 
 #include "Weapon/Projectile.h"
+
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Sound/SoundCue.h"
 #include "Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
-#include "Net/UnrealNetwork.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 AProjectile::AProjectile()
@@ -25,7 +27,12 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
 
+	DestroyTime = 3.f;
 	CurrentHitObject = EHitObject::EHO_None;
+
+	Damage = 20.f;
+	DamageInnerRadius = 200.f;
+	DamageOuterRadius = 500.f;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -42,6 +49,18 @@ void AProjectile::BeginPlay()
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectile::DestroyTimerFinished, DestroyTime);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -111,6 +130,31 @@ void AProjectile::SpawnHitEffects()
 	if (IsValid(ImpactSound))
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+	}
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AProjectile::ExplodeDamage()
+{
+	const APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(this, Damage, 10.f, GetActorLocation(),
+				DamageInnerRadius, DamageOuterRadius, 1.f, UDamageType::StaticClass(), TArray<AActor*>(), this, FiringController);
+		}
 	}
 }
 

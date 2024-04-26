@@ -21,6 +21,8 @@ class UProjectileMovementComponent;
 class UParticleSystem;
 class UParticleSystemComponent;
 class USoundCue;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 UCLASS()
 class BLASTER_API AProjectile : public AActor
@@ -32,11 +34,26 @@ public:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UStaticMeshComponent* ProjectileMesh;
+
+	UPROPERTY()
+	UNiagaraComponent* TrailSystemComponent;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	UNiagaraSystem* TrailSystem;
+
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
 	
 	UPROPERTY(EditAnywhere)
-	float Damage = 20.f;
+	float Damage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DamageInnerRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DamageOuterRadius;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
@@ -54,6 +71,10 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	void DestroyTimerFinished();
+
+	void StartDestroyTimer();
+
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
@@ -64,12 +85,21 @@ protected:
 
 	void SpawnHitEffects();
 
+	void SpawnTrailSystem();
+
+	void ExplodeDamage();
+
 private:
 
 	UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* Tracer;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

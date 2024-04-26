@@ -26,18 +26,6 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	float DamageInnerRadius;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	float DamageOuterRadius;
-
-	UPROPERTY(EditAnywhere, Category = "VFX")
-	UNiagaraSystem* TrailSystem;
-
-	UPROPERTY()
-	UNiagaraComponent* TrailSystemComponent;
-
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundCue* ProjectileLoop;
 
@@ -55,17 +43,5 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
 	virtual void Destroyed() override;
-
-	void DestroyTimerFinished();
-
-private:
-
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UStaticMeshComponent* RocketMesh;
-
-	FTimerHandle DestroyTimer;
-
-	UPROPERTY(EditAnywhere)
-	float DestroyTime;
 	
 };
