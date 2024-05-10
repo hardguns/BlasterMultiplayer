@@ -106,4 +106,6 @@ public:
 
 	virtual void Destroyed() override;
 
+	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
+
 };

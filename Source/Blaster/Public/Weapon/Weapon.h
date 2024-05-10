@@ -97,6 +97,11 @@ public:
 
 	void AddAmmo(const int32 AmmoToAdd);
 
+	/**
+	 * Enable or disable custom depth
+	 */
+	void EnableCustomDepth(const bool bEnable);
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -160,7 +165,8 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomedInterpSpeed() const { return ZoomedInterpSpeed; }
-	bool IsEmpty();
+	bool IsEmpty() const;
+	bool IsFull() const;
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }

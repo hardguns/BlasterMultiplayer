@@ -47,6 +47,8 @@ public:
 	void SetHUDMatchCountdown(const float CountdownTime);
 
 	void SetHUDAnnouncementCountdown(const float CountdownTime);
+	
+	void SetHUDGrenades(const int32 Grenades);
 
 	virtual float GetServerTime(); // Sync with server world clock
 
@@ -120,6 +122,8 @@ private:
 	float HUDHealth;
 
 	float HUDMaxHealth;
+
+	int32 HUDGrenades;
 
 	/*******************************************/
 

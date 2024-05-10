@@ -56,6 +56,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	UImage* WeaponIcon;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
+	UTextBlock* GrenadesText;
+
 protected:
 
 	UPROPERTY(Transient)

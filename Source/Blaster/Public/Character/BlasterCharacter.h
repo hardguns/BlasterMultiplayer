@@ -55,6 +55,8 @@ public:
 	void PlayHitReactMontage();
 
 	void PlayElimMontage();
+	
+	void PlayThrowGrenadeMontage();
 
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -86,6 +88,7 @@ protected:
 	void AimButtonReleased();
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void GrenadeButtonPressed();
 
 #pragma endregion Input actions
 
@@ -139,6 +142,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* ThrowGrenadeMontage;
 
 	FTimerHandle ElimTimer;
 
@@ -256,6 +262,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* ElimBotSound;
 
+	/**
+	 * Grenade
+	 */
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
+
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -289,4 +302,8 @@ public:
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 
 	ECombatState GetCombatState() const;
+
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 };

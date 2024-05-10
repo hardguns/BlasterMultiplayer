@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Weapon/Weapon.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
@@ -10,6 +9,7 @@
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Weapon/Casing.h"
+#include "BlasterComponents/CombatComponent.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 AWeapon::AWeapon()
@@ -24,6 +24,10 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -121,6 +125,17 @@ void AWeapon::SetHUDAmmo()
 		{
 			BlasterOwnerController->SetHUDWeaponAmmo(Ammo);
 		}
+
+		const bool bCanTriggerMontageEnd = BlasterOwnerCharacter &&
+			BlasterOwnerCharacter->GetCombatComponent()
+			&& BlasterOwnerCharacter->GetCombatComponent()
+			&& BlasterOwnerCharacter->GetCombatComponent()->GetCombatState() == ECombatState::ECS_Reloading
+			&& WeaponType == EWeaponType::EWT_Shotgun;
+		
+		if (bCanTriggerMontageEnd && IsFull())
+		{
+			BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
+		}
 	}
 }
 
@@ -155,6 +170,7 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		EnableCustomDepth(false);
 		
 		if (WeaponType == EWeaponType::EWT_SubmachineGun)
 		{
@@ -172,6 +188,9 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 
 	default:
@@ -192,6 +211,7 @@ void AWeapon::SetWeaponState(const EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		EnableCustomDepth(false);
 
 		if (WeaponType == EWeaponType::EWT_SubmachineGun)
 		{
@@ -214,6 +234,9 @@ void AWeapon::SetWeaponState(const EWeaponState State)
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		ShowPickupWidget(true);
 		break;
 
@@ -223,9 +246,15 @@ void AWeapon::SetWeaponState(const EWeaponState State)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-bool AWeapon::IsEmpty()
+bool AWeapon::IsEmpty() const
 {
 	return Ammo <= 0;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+bool AWeapon::IsFull() const
+{
+	return Ammo == MagCapacity;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -275,5 +304,15 @@ void AWeapon::AddAmmo(const int32 AmmoToAdd)
 {
 	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity);
 	OnRep_Ammo();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void AWeapon::EnableCustomDepth(const bool bEnable)
+{
+	if (WeaponMesh)
+	{
+		WeaponMesh->SetRenderCustomDepth(bEnable);
+		
+	}
 }
 

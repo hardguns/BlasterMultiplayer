@@ -9,6 +9,7 @@
 #include "BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
+class AProjectile;
 class AWeapon;
 class ABlasterCharacter;
 class ABlasterPlayerController;
@@ -33,7 +34,25 @@ public:
 
 	void FireButtonPressed(const bool bPressed);
 
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_LaunchGrenade(const FVector_NetQuantize& Target);
+
 protected:
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AProjectile> GrenadeClass;
+	
 	virtual void BeginPlay() override;
 
 	void SetAiming(const bool bIsAiming);
@@ -54,7 +73,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitTarget);
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_Reload();
 
 	void HandleReload();
@@ -68,10 +87,35 @@ protected:
 
 	void SetHUDCrosshairs(const float DeltaTime);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ThrowGrenade();
+
+	void ThrowGrenade();
+
+	void DropEquippedWeapon();
+
+	void AttachActorToSocket(AActor* ActorToAttach, const FName& SocketToAttachTo);
+
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+
+	void UpdateCarriedAmmo();
+
+	void PlayEquippedWeaponSound();
+
+	void ReloadEmptyWeapon();
+	
+	void ShowAttachedGrenade(const bool bShowGrenade);
+
 private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Equip")
-	FName HandSocketName;
+	FName LeftHandSmallWeaponSocketName;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Equip")
+	FName LeftHandSocketName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Equip")
+	FName RightHandSocketName;
 
 	ABlasterCharacter* Character;
 
@@ -185,7 +229,18 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ZoomedInterpSpeed = 20.f;
 
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades;
+
+	void SetGrenades(const float NewValue);
+
 	void InterpFOV(float DeltaTime);
+
+	UFUNCTION()
+	void OnRep_Grenades();
 
 	/**
 	*  Automatic Fire
@@ -203,8 +258,16 @@ private:
 
 	void UpdateAmmoValues();
 
+	void UpdateShotgunAmmoValues();
+
+	void UpdateHUDGrenades();
+
 public:	
 	
 	int32 GetCarriedAmmo() const { return CarriedAmmo; }
+
+	ECombatState GetCombatState() const { return CombatState; }
+
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 
 };
