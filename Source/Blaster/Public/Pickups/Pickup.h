@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Pickup.generated.h"
 
+class UNiagaraSystem;
+class UNiagaraComponent;
 class USphereComponent;
 class USoundCue;
 
@@ -21,6 +23,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+	
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent* PickupEffectComponent;
+	
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* PickupEffect;
 	
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate;

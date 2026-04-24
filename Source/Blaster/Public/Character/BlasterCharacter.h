@@ -8,6 +8,7 @@
 #include "Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
 #include "BlasterTypes/CombatState.h"
+#include "Math/UnitConversion.h"
 #include "BlasterCharacter.generated.h"
 
 class UBuffComponent;
@@ -226,7 +227,7 @@ private:
 	ABlasterPlayerController* BlasterPlayerController;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(const float LastHealth);
 
 	/**
 	* Dissolve Effect
@@ -300,7 +301,7 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-
+	
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
@@ -310,4 +311,6 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 };

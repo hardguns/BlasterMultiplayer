@@ -177,6 +177,7 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (BuffComponent)
 	{
 		BuffComponent->Character = this;
+		BuffComponent->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 	}
 }
 
@@ -288,10 +289,13 @@ float ABlasterCharacter::CalculateSpeed() const
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(const float LastHealth)
 {
-	PlayHitReactMontage();
 	UpdateHUDHealth();
+	if (Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -685,8 +689,9 @@ void ABlasterCharacter::SetHealth(const float NewHealth)
 {
 	if (HasAuthority() && Health != NewHealth)
 	{
+		const float PreviousHealth = Health;
 		Health = NewHealth;
-		OnRep_Health();
+		OnRep_Health(PreviousHealth);
 	}
 }
 

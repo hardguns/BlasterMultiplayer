@@ -2,10 +2,12 @@
 
 #include "Pickups/Pickup.h"
 
+#include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Weapon/WeaponTypes.h"
+#include "NiagaraFunctionLibrary.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 APickup::APickup()
@@ -29,6 +31,10 @@ APickup::APickup()
 	PickupMesh->SetRelativeScale3D(FVector(5.f));
 	PickupMesh->SetRenderCustomDepth(true);
 	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+		
+	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	PickupEffectComponent->SetupAttachment(RootComponent);
+	PickupEffectComponent->AddLocalOffset(FVector(0.f, 0.f, 50.f));
 	
 	BaseTurnRate = 45.f;
 }
@@ -52,6 +58,11 @@ void APickup::Destroyed()
 	if (PickupSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), FRotator::ZeroRotator);
+	}
+	
+	if (PickupEffect && PickupEffectComponent)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PickupEffect, PickupEffectComponent->GetComponentLocation(), GetActorRotation(), FVector(2.f));
 	}
 }
 
