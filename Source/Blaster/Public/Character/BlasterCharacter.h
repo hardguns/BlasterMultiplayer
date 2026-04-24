@@ -10,6 +10,7 @@
 #include "BlasterTypes/CombatState.h"
 #include "BlasterCharacter.generated.h"
 
+class UBuffComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBlasterOnPlayerEliminatedSignature, const float, RespawnTime);
 
 class USpringArmComponent;
@@ -123,6 +124,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+	
+	UPROPERTY(VisibleAnywhere)
+	UBuffComponent* BuffComponent;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;

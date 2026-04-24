@@ -21,7 +21,9 @@ class BLASTER_API UCombatComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
+	
 	UCombatComponent();
+	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -47,6 +49,11 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_LaunchGrenade(const FVector_NetQuantize& Target);
+
+	/**
+	 * Pickups
+	 */
+	void PickupAmmo(const EWeaponType WeaponType, const int32 AmmoAmount);
 
 protected:
 
@@ -117,10 +124,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Equip")
 	FName RightHandSocketName;
 
+	UPROPERTY()
 	ABlasterCharacter* Character;
 
+	UPROPERTY()
 	ABlasterPlayerController* Controller;
 
+	UPROPERTY()
 	ABlasterHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
@@ -171,6 +181,8 @@ private:
 	int32 StartingGrenadeLauncherAmmo;
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	int32 MaxCarriedAmmo;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;

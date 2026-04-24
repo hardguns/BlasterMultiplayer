@@ -47,6 +47,8 @@ UCombatComponent::UCombatComponent()
 
 	MaxGrenades = 4;
 	Grenades = 20;
+
+	MaxCarriedAmmo = 500;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -477,6 +479,21 @@ void UCombatComponent::LaunchGrenade()
 	if (Character && Character->IsLocallyControlled())
 	{
 		Server_LaunchGrenade(HitTarget);
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+void UCombatComponent::PickupAmmo(const EWeaponType WeaponType, const int32 AmmoAmount)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxCarriedAmmo);
+		UpdateCarriedAmmo();
+	}
+
+	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	{
+		Reload();
 	}
 }
 
